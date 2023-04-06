@@ -11,35 +11,48 @@ UTriggerComponent::UTriggerComponent()
 void UTriggerComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	
 }
 
-void UTriggerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UTriggerComponent::TickComponent(float DeltaTime, ELevelTick TickType,
+                                      FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// UE_LOG(LogTemp, Warning, TEXT("triggering!!"));
 
 	AActor* KeyActor = nullptr;
 	TArray<AActor*> Actors;
 	GetOverlappingActors(Actors);
 
+	if (Mover == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Mover not found %s"), *GetOwner()->GetActorNameOrLabel());
+		return;
+	}
+
 	for (auto Actor : Actors)
 	{
-		if (Actor->ActorHasTag(AcceptableTag))
+		if (Actor->ActorHasTag(AcceptableTag) && !Actor->ActorHasTag("Grabbed"))
 		{
-		KeyActor = Actor;
+			KeyActor = Actor;
 		}
 	}
 
 	if (KeyActor != nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Unlocking"));
+		UPrimitiveComponent* KeyRootComponent = Cast<UPrimitiveComponent>(KeyActor->GetRootComponent());
+		if (KeyRootComponent != nullptr)
+		{
+			KeyRootComponent->SetSimulatePhysics(false);
+			KeyRootComponent->AttachToComponent(this, FAttachmentTransformRules::KeepWorldTransform);
+			Mover->SetShouldMove(true);
+		}
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ReLocking"));
+		Mover->SetShouldMove(false);
 	}
-		
+}
+
+void UTriggerComponent::SetMover(UMover* NewMover)
+{
+	Mover = NewMover;
 }

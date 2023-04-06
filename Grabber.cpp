@@ -48,6 +48,7 @@ void UGrabber::Release()
 	if (PhysicsHandleComponent == nullptr) return;
 	if (PhysicsHandleComponent->GetGrabbedComponent() == nullptr) return;
 
+	PhysicsHandleComponent->GetGrabbedComponent()->GetOwner()->Tags.Remove("Grabbed");
 	PhysicsHandleComponent->GetGrabbedComponent()->WakeAllRigidBodies();
 	PhysicsHandleComponent->ReleaseComponent();
 }
@@ -66,7 +67,10 @@ void UGrabber::Grab()
 	}
 
 	PhysicsHandleComponent->SetLinearStiffness(1400);
+	HitResult.GetActor()->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	HitResult.GetComponent()->SetSimulatePhysics(true);
 	HitResult.GetComponent()->WakeAllRigidBodies();
+	HitResult.GetActor()->Tags.Add("Grabbed");
 	PhysicsHandleComponent->GrabComponentAtLocationWithRotation(HitResult.GetComponent(), NAME_None,HitResult.ImpactPoint, GetComponentRotation());
 }
 
